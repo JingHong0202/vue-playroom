@@ -1,10 +1,10 @@
-import { createApp, h, onUnmounted, watchEffect } from 'vue'
-import { Repl, ReplStore } from '../src'
-;(window as any).process = { env: {} }
+import { createApp, h, onUnmounted, watchEffect } from 'vue';
+import { Repl, ReplStore } from '../src';
+(window as any).process = { env: {} };
 
 const App = {
   setup() {
-    const query = new URLSearchParams(location.search)
+    const query = new URLSearchParams(location.search);
     const store = new ReplStore({
       serializedState: location.hash.slice(1),
       showOutput: query.has('so'),
@@ -14,21 +14,22 @@ const App = {
         : `${location.origin}/src/vue-dev-proxy`,
       defaultVueServerRendererURL: import.meta.env.PROD
         ? undefined
-        : `${location.origin}/src/vue-server-renderer-dev-proxy`,
-    })
+        : `${location.origin}/src/vue-server-renderer-dev-proxy`
+    });
     function handerMessage({ data }: MessageEvent) {
       if (data.type === 'update') {
         // console.log(data)
         setTimeout(() => {
-          data.code && (store.state.activeFile.code = data.code)
-        }, data.delay || 1000)
+          data.code && (store.state.activeFile.code = data.code);
+          parent.postMessage({ type: 'updated' }, '*');
+        }, data.delay || 1000);
       }
     }
-    window.addEventListener('message', handerMessage)
+    window.addEventListener('message', handerMessage);
     onUnmounted(() => {
-      window.removeEventListener('message', handerMessage)
-    })
-    watchEffect(() => history.replaceState({}, '', store.serialize()))
+      window.removeEventListener('message', handerMessage);
+    });
+    watchEffect(() => history.replaceState({}, '', store.serialize()));
 
     // setTimeout(() => {
     // store.setFiles(
@@ -53,12 +54,12 @@ const App = {
         sfcOptions: {
           script: {
             // inlineTemplate: false
-          },
+          }
         },
-        // showCompileOutput: false,
-        // showImportMap: false
-      })
-  },
-}
+        showCompileOutput: import.meta.env.DEV,
+        showImportMap: import.meta.env.DEV
+      });
+  }
+};
 
-createApp(App).mount('#app')
+createApp(App).mount('#app');

@@ -12,6 +12,7 @@ const preview: Preview = {
         date: /Date$/,
       },
     },
+    docs: { story: { inline: true } }
   },
 };
 

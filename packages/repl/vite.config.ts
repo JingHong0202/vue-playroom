@@ -1,5 +1,5 @@
-import { defineConfig, Plugin } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import { defineConfig, Plugin } from 'vite';
+import vue from '@vitejs/plugin-vue';
 
 const genStub: Plugin = {
   name: 'gen-stub',
@@ -9,22 +9,18 @@ const genStub: Plugin = {
       type: 'asset',
       fileName: 'ssr-stub.js',
       source: `module.exports = {}`
-    })
+    });
   }
-}
+};
 
 export default defineConfig({
   plugins: [vue(), genStub],
+  base: './',
   build: {
-    target: 'esnext',
-    minify: false,
-    lib: {
-      entry: './src/index.ts',
-      formats: ['es'],
-      fileName: () => 'vue-repl.js'
-    },
-    rollupOptions: {
-      external: ['vue', 'vue/compiler-sfc']
-    }
+    minify: true,
+    outDir: 'playroom'
+    // rollupOptions: {
+    //   external: ["vue", "vue/compiler-sfc"],
+    // },
   }
-})
+});

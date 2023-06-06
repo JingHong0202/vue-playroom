@@ -43,12 +43,11 @@
     "prebuild": "pnpm clean",
     "build": "tsup",
     "build:watch": "pnpm build --watch",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "run-p build:watch storybook",
     "prerelease": "zx scripts/prepublish-checks.mjs",
     "release": "pnpm build && auto shipit",
     "eject-ts": "zx scripts/eject-typescript.mjs",
-    "storybook": "storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006 --quiet",
     "build-storybook": "storybook build"
   },
   "devDependencies": {
