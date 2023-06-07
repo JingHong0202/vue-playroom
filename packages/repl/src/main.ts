@@ -1,5 +1,5 @@
 import { createApp, h, onUnmounted, watchEffect } from 'vue';
-import { Repl, ReplStore } from '../src';
+import { Repl, ReplStore } from '.';
 (window as any).process = { env: {} };
 
 const App = {
@@ -21,6 +21,7 @@ const App = {
         // console.log(data)
         setTimeout(() => {
           data.code && (store.state.activeFile.code = data.code);
+          document.documentElement.className = data.mode || "dark"
           parent.postMessage({ type: 'updated' }, '*');
         }, data.delay || 1000);
       }

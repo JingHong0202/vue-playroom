@@ -6,18 +6,12 @@ import { Button } from './Button';
 const meta: Meta<typeof Button> = {
   title: 'Example/Button',
   component: Button,
+  tags: ['autodocs'],
   // More on argTypes: https://storybook.js.org/docs/react/api/argtypes
   argTypes: {
     backgroundColor: { control: 'color' }
   },
-  tags: ['autodocs'],
-  parameters: {
-    myAddonParameter: `
-<MyComponent boolProp scalarProp={1} complexProp={{ foo: 1, bar: '2' }}>
-  <SomeOtherComponent funcProp={(a) => a.id} />
-</MyComponent>
-`
-  }
+  parameters: {}
 };
 
 export default meta;
@@ -41,7 +35,7 @@ install()
 <template>
   <su-button type="primary">button</su-button>
 </template>`
-    },
+    }
   }
 };
 
@@ -55,6 +49,13 @@ export const Large: Story = {
   args: {
     size: 'large',
     label: 'Button'
+  },
+  parameters: {
+    previewTabs: {
+      ['storybook/vue-playroom-addon/tab']: {
+        hidden: true
+      }
+    }
   }
 };
 
