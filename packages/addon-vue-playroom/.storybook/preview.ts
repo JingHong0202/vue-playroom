@@ -2,9 +2,9 @@ import type { Preview } from "@storybook/react";
 // import { withGlobals } from './withGlobals'
 const preview: Preview = {
   parameters: {
-    backgrounds: {
-      default: "light",
-    },
+    // backgrounds: {
+    //   default: "light",
+    // },
     actions: { argTypesRegex: "^on[A-Z].*" },
     controls: {
       matchers: {

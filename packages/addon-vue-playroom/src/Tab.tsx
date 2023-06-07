@@ -44,13 +44,14 @@ export const Tab: FC<TabProps> = ({ active }) => {
   return (
     <>
       {!show && (
-        <div
-          aria-label="Content is loading..."
-          aria-live="polite"
-          role="progressbar"
-          id="preview-loader"
-          className="sto-cfvyep"
-        ></div>
+        <div className="css-ky0vih">
+          <div
+            aria-label="Content is loading..."
+            aria-live="polite"
+            role="progressbar"
+            id="preview-loader"
+            className="css-cfvyep"></div>
+        </div>
       )}
       <Iframe
         onLoad={() => [emit(EVENTS.UPDATE_PROXY)]}
