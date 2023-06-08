@@ -1,8 +1,8 @@
-import { useChannel } from '@storybook/manager-api';
+import { useParameter } from '@storybook/manager-api';
 import { styled, keyframes } from '@storybook/theming';
-import { StoryContext } from '@storybook/types';
+// import { StoryContext } from '@storybook/types';
 import React, { FC, useState } from 'react';
-import { EVENTS, PARAM_KEY } from './constants';
+import { PARAM_KEY } from './constants';
 interface TabProps {
   active: boolean;
 }
@@ -15,8 +15,6 @@ const Iframe = styled.iframe({
   height: '100%',
   width: '100%'
 });
-//  @keyframes animation-u07e3c{}
-
 function Loading() {
   const animation = keyframes`
 from{-webkit-transform:rotate(0deg);-moz-transform:rotate(0deg);-ms-transform:rotate(0deg);transform:rotate(0deg);}
@@ -48,42 +46,39 @@ to{-webkit-transform:rotate(360deg);-moz-transform:rotate(360deg);-ms-transform:
   return <Loading />;
 }
 
+const update_cb = (playroom: any) => {
+  const iframe: HTMLIFrameElement = document.querySelector(
+    "iframe[title='vue-playroom']"
+  );
+  iframe.contentWindow.postMessage({ type: 'update', ...playroom }, '*');
+};
+
+let handlerMessage: (data: any) => void;
+
 export const Tab: FC<TabProps> = ({ active }) => {
   if (!active) {
     return null;
   }
+  const playroom: any = useParameter('playroom');
   const [outMode, setOutMode] = useState(0);
-  const emit = useChannel({
-    [EVENTS.UPDATE]: (context: StoryContext) => {
-      if (context.parameters.playroom?.code == undefined) {
-        setOutMode(2)
-        return
-      }
-      const iframe: HTMLIFrameElement = document.querySelector(
-        "iframe[title='vue-playroom']"
-      );
-      iframe.contentWindow.postMessage(
-        { type: 'update', ...context.parameters.playroom },
-        '*'
-      );
-    }
-  });
 
-  const handlerMessage = ({ data }: MessageEvent) => {
+  if (playroom?.code == undefined) {
+    return <Message>The story has no code parameter set</Message>;
+  }
+  window.removeEventListener('message', handlerMessage);
+  handlerMessage = ({ data }: MessageEvent) => {
     if (data.type === 'updated') {
       setOutMode(1);
-      window.removeEventListener('message', handlerMessage);
     }
   };
   window.addEventListener('message', handlerMessage);
 
-  return outMode <= 1 ? (
+  return (
     <>
       {outMode === 0 && <Loading />}
       <Iframe
-        onLoad={() => [emit(EVENTS.UPDATE_PROXY)]}
+        onLoad={() => update_cb(playroom)}
         allowFullScreen
-        // ref={iframeRef}
         style={{ visibility: outMode === 1 ? 'unset' : 'hidden' }}
         src={
           process.env.NODE_ENV === 'production'
@@ -94,7 +89,5 @@ export const Tab: FC<TabProps> = ({ active }) => {
         key={PARAM_KEY}
       />
     </>
-  ) : (
-    <Message>The story has no code parameter set</Message>
   );
 };

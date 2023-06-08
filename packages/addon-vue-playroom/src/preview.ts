@@ -11,7 +11,7 @@
 import type { Renderer, ProjectAnnotations } from "@storybook/types";
 import { PARAM_KEY } from "./constants";
 // import { withGlobals } from "./withGlobals";
-import { withWrap } from "./withWrap";
+// import { withWrap } from "./withWrap";
 
 /**
  * Note: if you want to use JSX in this file, rename it to `preview.tsx`
@@ -19,7 +19,7 @@ import { withWrap } from "./withWrap";
  */
 
 const preview: ProjectAnnotations<Renderer> = {
-  decorators: [withWrap],
+  // decorators: [withWrap],
   globals: {
     [PARAM_KEY]: false,
   },
