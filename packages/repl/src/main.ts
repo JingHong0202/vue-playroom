@@ -1,4 +1,4 @@
-import { createApp, h, onUnmounted, watchEffect } from 'vue';
+import { createApp, h, onUnmounted, ref, watchEffect } from 'vue';
 import { Repl, ReplStore } from '.';
 (window as any).process = { env: {} };
 
@@ -21,9 +21,14 @@ const App = {
         // console.log(data)
         setTimeout(() => {
           data.code && (store.state.activeFile.code = data.code);
-          document.documentElement.className = data.mode || "dark"
+          document.documentElement.className =
+            data.mode ||
+            parent.document.documentElement.getAttribute('data-su-theme') ||
+            'dark';
           parent.postMessage({ type: 'updated' }, '*');
         }, data.delay || 1000);
+      } else if (data.type === 'changeTheme') {
+        document.documentElement.className = data.mode || 'dark';
       }
     }
     window.addEventListener('message', handerMessage);
@@ -51,7 +56,7 @@ const App = {
       h(Repl, {
         store,
         // layout: 'vertical',
-        ssr: false,
+        ssr: true,
         sfcOptions: {
           script: {
             // inlineTemplate: false
