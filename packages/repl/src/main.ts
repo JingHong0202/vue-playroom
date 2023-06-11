@@ -56,14 +56,14 @@ const App = {
       h(Repl, {
         store,
         // layout: 'vertical',
-        ssr: true,
-        sfcOptions: {
-          script: {
-            // inlineTemplate: false
-          }
-        },
-        showCompileOutput: import.meta.env.DEV,
-        showImportMap: import.meta.env.DEV
+        // ssr: true,
+        // sfcOptions: {
+        //   script: {
+        //     inlineTemplate: false
+        //   }
+        // },
+        // showCompileOutput: import.meta.env.DEV,
+        // showImportMap: import.meta.env.DEV
       });
   }
 };

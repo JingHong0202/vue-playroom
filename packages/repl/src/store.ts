@@ -1,25 +1,48 @@
-import { version, reactive, watchEffect } from 'vue'
-import * as defaultCompiler from 'vue/compiler-sfc'
-import { compileFile } from './transform'
-import { utoa, atou } from './utils'
+import { version, reactive, watchEffect } from 'vue';
+import * as defaultCompiler from 'vue/compiler-sfc';
+import { compileFile } from './transform';
+import { utoa, atou } from './utils';
 import {
   SFCScriptCompileOptions,
   SFCAsyncStyleCompileOptions,
-  SFCTemplateCompileOptions,
-} from 'vue/compiler-sfc'
-import { OutputModes } from './output/types'
+  SFCTemplateCompileOptions
+} from 'vue/compiler-sfc';
+import { OutputModes } from './output/types';
 
-const defaultMainFile = 'App.vue'
-
+const defaultMainFile = 'App.vue';
+const uiHref = !import.meta.env.DEV
+  ? 'https://unpkg.com/@jinghong/surprise-ui/dist/es/'
+  : 'http://localhost:5173/surprise-ui/es/';
 const welcomeCode = `
-<script setup>
-import install from './inject-plugin.js'
-install()
+ <script setup>
+function buildData() {
+  const res = [];
+  for (let index = 0; index < 50; index++) {
+    res.push({ id: index, name: index });
+  }
+  return res;
+}
+const data = buildData();
 </script>
 
 <template>
+  <horizonetal-virtual-list
+    :itemSize="100"
+    :data="data"
+    keyName="id"
+    v-slot="{ slotScope }">
+    <div v-text="slotScope.name" :style="'display:flex;justify-content:center;align-items:center;height: 100%;width:100px;background-color:' + (slotScope.__index % 2 ? 'red' : 'green')"/>
+  </horizonetal-virtual-list>
 </template>
-`.trim()
+
+<style>
+#app,
+html,
+body {
+  height: 99%;
+}
+</style>
+`.trim();
 
 const injectCode = `
 import { getCurrentInstance } from 'vue'
@@ -34,7 +57,7 @@ export function appendStyle() {
   return new Promise((resolve, reject) => {
     const link = document.createElement('link')
     link.rel = 'stylesheet'
-    link.href = 'http://localhost:5173/surprise-ui/es/style.css'
+    link.href = '${uiHref}style.css'
     link.onload = resolve
     link.onerror = reject
     document.body.appendChild(link)
@@ -43,211 +66,229 @@ export function appendStyle() {
 
 await appendStyle()
 
-`,
-  injectFileName = 'inject-plugin.js'
+`.trim(),
+  injectFileName = 'inject-plugin.js',
+  mainContainerFileName = 'play.vue',
+  mainContainerCode = `
+<script setup>
+import App from './${defaultMainFile}'
+import install from './${injectFileName}'
+install()
+</script>
 
+<template>
+  <App />
+</template>
+  `.trim();
 export class File {
-  filename: string
-  code: string
-  hidden: boolean
+  filename: string;
+  code: string;
+  hidden: boolean;
   compiled = {
     js: '',
     css: '',
-    ssr: '',
-  }
+    ssr: ''
+  };
 
   constructor(filename: string, code = '', hidden = false) {
-    this.filename = filename
-    this.code = code
-    this.hidden = hidden
+    this.filename = filename;
+    this.code = code;
+    this.hidden = hidden;
   }
 }
 
 export interface StoreState {
-  mainFile: string
-  files: Record<string, File>
-  activeFile: File
-  errors: (string | Error)[]
-  vueRuntimeURL: string
-  vueServerRendererURL: string
+  mainFile: string;
+  files: Record<string, File>;
+  activeFile: File;
+  errors: (string | Error)[];
+  vueRuntimeURL: string;
+  vueServerRendererURL: string;
   // used to force reset the sandbox
-  resetFlip: boolean
+  resetFlip: boolean;
 }
 
 export interface SFCOptions {
-  script?: Partial<SFCScriptCompileOptions>
-  style?: Partial<SFCAsyncStyleCompileOptions>
-  template?: Partial<SFCTemplateCompileOptions>
+  script?: Partial<SFCScriptCompileOptions>;
+  style?: Partial<SFCAsyncStyleCompileOptions>;
+  template?: Partial<SFCTemplateCompileOptions>;
 }
 
 export interface Store {
-  state: StoreState
-  options?: SFCOptions
-  compiler: typeof defaultCompiler
-  vueVersion?: string
-  init: () => void
-  setActive: (filename: string) => void
-  addFile: (filename: string | File) => void
-  deleteFile: (filename: string) => void
-  getImportMap: () => any
-  initialShowOutput: boolean
-  initialOutputMode: OutputModes
+  state: StoreState;
+  options?: SFCOptions;
+  compiler: typeof defaultCompiler;
+  vueVersion?: string;
+  init: () => void;
+  setActive: (filename: string) => void;
+  addFile: (filename: string | File) => void;
+  deleteFile: (filename: string) => void;
+  getImportMap: () => any;
+  initialShowOutput: boolean;
+  initialOutputMode: OutputModes;
 }
 
 export interface StoreOptions {
-  serializedState?: string
-  showOutput?: boolean
+  serializedState?: string;
+  showOutput?: boolean;
   // loose type to allow getting from the URL without inducing a typing error
-  outputMode?: OutputModes | string
-  defaultVueRuntimeURL?: string
-  defaultVueServerRendererURL?: string
+  outputMode?: OutputModes | string;
+  defaultVueRuntimeURL?: string;
+  defaultVueServerRendererURL?: string;
 }
 
 export class ReplStore implements Store {
-  state: StoreState
-  compiler = defaultCompiler
-  vueVersion?: string
-  options?: SFCOptions
-  initialShowOutput: boolean
-  initialOutputMode: OutputModes
+  state: StoreState;
+  compiler = defaultCompiler;
+  vueVersion?: string;
+  options?: SFCOptions;
+  initialShowOutput: boolean;
+  initialOutputMode: OutputModes;
 
-  private defaultVueRuntimeURL: string
-  private defaultVueServerRendererURL: string
-  private pendingCompiler: Promise<any> | null = null
+  private defaultVueRuntimeURL: string;
+  private defaultVueServerRendererURL: string;
+  private pendingCompiler: Promise<any> | null = null;
 
   constructor({
     serializedState = '',
     defaultVueRuntimeURL = `https://unpkg.com/@vue/runtime-dom@${version}/dist/runtime-dom.esm-browser.js`,
     defaultVueServerRendererURL = `https://unpkg.com/@vue/server-renderer@${version}/dist/server-renderer.esm-browser.js`,
     showOutput = false,
-    outputMode = 'preview',
+    outputMode = 'preview'
   }: StoreOptions = {}) {
-    let files: StoreState['files'] = {}
+    let files: StoreState['files'] = {};
 
     if (serializedState) {
-      const saved = JSON.parse(atou(serializedState))
+      const saved = JSON.parse(atou(serializedState));
       for (const filename in saved) {
-        files[filename] = new File(filename, saved[filename])
+        files[filename] = new File(filename, saved[filename]);
       }
     } else {
       files = {
-        [defaultMainFile]: new File(defaultMainFile, welcomeCode),
-      }
+        [defaultMainFile]: new File(defaultMainFile, welcomeCode)
+      };
     }
 
-    this.defaultVueRuntimeURL = defaultVueRuntimeURL
-    this.defaultVueServerRendererURL = defaultVueServerRendererURL
-    this.initialShowOutput = showOutput
-    this.initialOutputMode = outputMode as OutputModes
+    this.defaultVueRuntimeURL = defaultVueRuntimeURL;
+    this.defaultVueServerRendererURL = defaultVueServerRendererURL;
+    this.initialShowOutput = showOutput;
+    this.initialOutputMode = outputMode as OutputModes;
 
-    let mainFile = defaultMainFile
+    let mainFile = defaultMainFile;
     if (!files[mainFile]) {
-      mainFile = Object.keys(files)[0]
+      mainFile = Object.keys(files)[0];
     }
+
+    files[mainContainerFileName] = new File(
+      mainContainerFileName,
+      mainContainerCode,
+      !import.meta.env.DEV
+    );
+
     this.state = reactive({
-      mainFile,
+      mainFile: mainContainerFileName,
       files,
       activeFile: files[mainFile],
       errors: [],
       vueRuntimeURL: this.defaultVueRuntimeURL,
       vueServerRendererURL: this.defaultVueServerRendererURL,
-      resetFlip: true,
-    })
+      resetFlip: true
+    });
 
-    this.initImportMap()
+    this.initImportMap();
     // surprise-ui inject
     // @ts-ignore
     this.state.files[injectFileName] = new File(
       injectFileName,
       injectCode,
       !import.meta.env.DEV
-    )
+    );
   }
 
   // don't start compiling until the options are set
   init() {
-    watchEffect(() => compileFile(this, this.state.activeFile))
+    watchEffect(() => compileFile(this, this.state.activeFile));
     for (const file in this.state.files) {
       if (file !== defaultMainFile) {
-        compileFile(this, this.state.files[file])
+        compileFile(this, this.state.files[file]);
       }
     }
   }
 
   setActive(filename: string) {
-    this.state.activeFile = this.state.files[filename]
+    this.state.activeFile = this.state.files[filename];
   }
 
   addFile(fileOrFilename: string | File): void {
     const file =
       typeof fileOrFilename === 'string'
         ? new File(fileOrFilename)
-        : fileOrFilename
-    this.state.files[file.filename] = file
-    if (!file.hidden) this.setActive(file.filename)
+        : fileOrFilename;
+    this.state.files[file.filename] = file;
+    if (!file.hidden) this.setActive(file.filename);
   }
 
   deleteFile(filename: string) {
     if (confirm(`Are you sure you want to delete ${filename}?`)) {
       if (this.state.activeFile.filename === filename) {
-        this.state.activeFile = this.state.files[this.state.mainFile]
+        this.state.activeFile = this.state.files[this.state.mainFile];
       }
-      delete this.state.files[filename]
+      delete this.state.files[filename];
     }
   }
 
   serialize() {
-    const files = this.getFiles()
-    const importMap = files['import-map.json']
+    const files = this.getFiles();
+    const importMap = files['import-map.json'];
     if (importMap) {
-      const { imports } = JSON.parse(importMap)
+      const { imports } = JSON.parse(importMap);
       if (imports['vue'] === this.defaultVueRuntimeURL) {
-        delete imports['vue']
+        delete imports['vue'];
       }
       if (imports['vue/server-renderer'] === this.defaultVueServerRendererURL) {
-        delete imports['vue/server-renderer']
+        delete imports['vue/server-renderer'];
       }
       if (!Object.keys(imports).length) {
-        delete files['import-map.json']
+        delete files['import-map.json'];
       } else {
-        files['import-map.json'] = JSON.stringify({ imports }, null, 2)
+        files['import-map.json'] = JSON.stringify({ imports }, null, 2);
       }
     }
-    return '#' + utoa(JSON.stringify(files))
+    return '#' + utoa(JSON.stringify(files));
   }
 
   getFiles() {
-    const exported: Record<string, string> = {}
+    const exported: Record<string, string> = {};
     for (const filename in this.state.files) {
-      exported[filename] = this.state.files[filename].code
+      exported[filename] = this.state.files[filename].code;
     }
-    return exported
+    return exported;
   }
 
   async setFiles(newFiles: Record<string, string>, mainFile = defaultMainFile) {
-    const files: Record<string, File> = {}
+    const files: Record<string, File> = {};
     if (mainFile === defaultMainFile && !newFiles[mainFile]) {
-      files[mainFile] = new File(mainFile, welcomeCode)
+      files[mainFile] = new File(mainFile, welcomeCode);
     }
     for (const filename in newFiles) {
-      files[filename] = new File(filename, newFiles[filename])
+      files[filename] = new File(filename, newFiles[filename]);
     }
     for (const file in files) {
-      await compileFile(this, files[file])
+      await compileFile(this, files[file]);
     }
-    this.state.mainFile = mainFile
-    this.state.files = files
-    this.initImportMap()
-    this.setActive(mainFile)
-    this.forceSandboxReset()
+    this.state.mainFile = mainFile;
+    this.state.files = files;
+    this.initImportMap();
+    this.setActive(mainFile);
+    this.forceSandboxReset();
   }
 
   private forceSandboxReset() {
-    this.state.resetFlip = !this.state.resetFlip
+    this.state.resetFlip = !this.state.resetFlip;
   }
 
   private initImportMap() {
-    const map = this.state.files['import-map.json']
+    const map = this.state.files['import-map.json'];
     if (!map) {
       this.state.files['import-map.json'] = new File(
         'import-map.json',
@@ -256,85 +297,86 @@ export class ReplStore implements Store {
             imports: {
               vue: this.defaultVueRuntimeURL,
               'vue/server-renderer': this.defaultVueServerRendererURL,
-              'surprise-ui': 'http://localhost:5173/surprise-ui/es/index.mjs',
-            },
+              'surprise-ui': ` ${uiHref}index.mjs`
+            }
           },
           null,
           2
         )
-      )
+      );
     } else {
       try {
-        const json = JSON.parse(map.code)
+        const json = JSON.parse(map.code);
         if (!json.imports.vue) {
-          json.imports.vue = this.defaultVueRuntimeURL
+          json.imports.vue = this.defaultVueRuntimeURL;
         } else {
-          json.imports.vue = fixURL(json.imports.vue)
+          json.imports.vue = fixURL(json.imports.vue);
         }
         if (!json.imports['vue/server-renderer']) {
-          json.imports['vue/server-renderer'] = this.defaultVueServerRendererURL
+          json.imports['vue/server-renderer'] =
+            this.defaultVueServerRendererURL;
         } else {
           json.imports['vue/server-renderer'] = fixURL(
             json.imports['vue/server-renderer']
-          )
+          );
         }
-        map.code = JSON.stringify(json, null, 2)
+        map.code = JSON.stringify(json, null, 2);
       } catch (e) {}
     }
   }
 
   getImportMap() {
     try {
-      return JSON.parse(this.state.files['import-map.json'].code)
+      return JSON.parse(this.state.files['import-map.json'].code);
     } catch (e) {
       this.state.errors = [
-        `Syntax error in import-map.json: ${(e as Error).message}`,
-      ]
-      return {}
+        `Syntax error in import-map.json: ${(e as Error).message}`
+      ];
+      return {};
     }
   }
 
   setImportMap(map: {
-    imports: Record<string, string>
-    scopes?: Record<string, Record<string, string>>
+    imports: Record<string, string>;
+    scopes?: Record<string, Record<string, string>>;
   }) {
-    this.state.files['import-map.json']!.code = JSON.stringify(map, null, 2)
+    this.state.files['import-map.json']!.code = JSON.stringify(map, null, 2);
   }
 
   async setVueVersion(version: string) {
-    this.vueVersion = version
-    const compilerUrl = `https://unpkg.com/@vue/compiler-sfc@${version}/dist/compiler-sfc.esm-browser.js`
-    const runtimeUrl = `https://unpkg.com/@vue/runtime-dom@${version}/dist/runtime-dom.esm-browser.js`
-    const ssrUrl = `https://unpkg.com/@vue/server-renderer@${version}/dist/server-renderer.esm-browser.js`
-    this.pendingCompiler = import(/* @vite-ignore */ compilerUrl)
-    this.compiler = await this.pendingCompiler
-    this.pendingCompiler = null
-    this.state.vueRuntimeURL = runtimeUrl
-    this.state.vueServerRendererURL = ssrUrl
-    const importMap = this.getImportMap()
-    const imports = importMap.imports || (importMap.imports = {})
-    imports.vue = runtimeUrl
-    imports['vue/server-renderer'] = ssrUrl
-    this.setImportMap(importMap)
-    this.forceSandboxReset()
-    console.info(`[@vue/repl] Now using Vue version: ${version}`)
+    this.vueVersion = version;
+    const compilerUrl = `https://unpkg.com/@vue/compiler-sfc@${version}/dist/compiler-sfc.esm-browser.js`;
+    const runtimeUrl = `https://unpkg.com/@vue/runtime-dom@${version}/dist/runtime-dom.esm-browser.js`;
+    const ssrUrl = `https://unpkg.com/@vue/server-renderer@${version}/dist/server-renderer.esm-browser.js`;
+    this.pendingCompiler = import(/* @vite-ignore */ compilerUrl);
+    this.compiler = await this.pendingCompiler;
+    this.pendingCompiler = null;
+    this.state.vueRuntimeURL = runtimeUrl;
+    this.state.vueServerRendererURL = ssrUrl;
+    const importMap = this.getImportMap();
+    const imports = importMap.imports || (importMap.imports = {});
+    imports.vue = runtimeUrl;
+    imports['vue/server-renderer'] = ssrUrl;
+    this.setImportMap(importMap);
+    this.forceSandboxReset();
+    console.info(`[@vue/repl] Now using Vue version: ${version}`);
   }
 
   resetVueVersion() {
-    this.vueVersion = undefined
-    this.compiler = defaultCompiler
-    this.state.vueRuntimeURL = this.defaultVueRuntimeURL
-    this.state.vueServerRendererURL = this.defaultVueServerRendererURL
-    const importMap = this.getImportMap()
-    const imports = importMap.imports || (importMap.imports = {})
-    imports.vue = this.defaultVueRuntimeURL
-    imports['vue/server-renderer'] = this.defaultVueServerRendererURL
-    this.setImportMap(importMap)
-    this.forceSandboxReset()
-    console.info(`[@vue/repl] Now using default Vue version`)
+    this.vueVersion = undefined;
+    this.compiler = defaultCompiler;
+    this.state.vueRuntimeURL = this.defaultVueRuntimeURL;
+    this.state.vueServerRendererURL = this.defaultVueServerRendererURL;
+    const importMap = this.getImportMap();
+    const imports = importMap.imports || (importMap.imports = {});
+    imports.vue = this.defaultVueRuntimeURL;
+    imports['vue/server-renderer'] = this.defaultVueServerRendererURL;
+    this.setImportMap(importMap);
+    this.forceSandboxReset();
+    console.info(`[@vue/repl] Now using default Vue version`);
   }
 }
 
 function fixURL(url: string) {
-  return url.replace('https://sfc.vuejs', 'https://play.vuejs')
+  return url.replace('https://sfc.vuejs', 'https://play.vuejs');
 }
