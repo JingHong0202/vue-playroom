@@ -5,6 +5,7 @@ import { Repl, ReplStore } from '.';
 const App = {
   setup() {
     const query = new URLSearchParams(location.search);
+    const inited = ref(false);
     const store = new ReplStore({
       serializedState: location.hash.slice(1),
       showOutput: query.has('so'),
@@ -26,6 +27,7 @@ const App = {
             parent.document.documentElement.getAttribute('data-su-theme') ||
             'dark';
           parent.postMessage({ type: 'updated' }, '*');
+          inited.value = true;
         }, data.delay || 1000);
       } else if (data.type === 'changeTheme') {
         document.documentElement.className = data.mode || 'dark';
@@ -37,7 +39,7 @@ const App = {
     });
     watchEffect(() => history.replaceState({}, '', store.serialize()));
 
-    // setTimeout(() => {
+    // setTimeout(() => { 
     // store.setFiles(
     //   {
     //     'index.html': '<h1>yo</h1>',
@@ -51,9 +53,8 @@ const App = {
     // }, 1000);
 
     // store.setVueVersion('3.2.8')
-
-    return () =>
-      h(Repl, {
+    return () => {
+      return inited.value && h(Repl, {
         store,
         // layout: 'vertical',
         // ssr: true,
@@ -62,9 +63,10 @@ const App = {
         //     inlineTemplate: false
         //   }
         // },
-        // showCompileOutput: import.meta.env.DEV,
-        // showImportMap: import.meta.env.DEV
+        showCompileOutput: import.meta.env.DEV,
+        showImportMap: import.meta.env.DEV
       });
+    };
   }
 };
 

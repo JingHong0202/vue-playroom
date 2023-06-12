@@ -22,10 +22,11 @@ const mode = ref<OutputModes>(
     ? store.initialOutputMode as OutputModes
     : 'preview'
 )
+const isDev = import.meta.env.DEV
 </script>
 
 <template>
-  <div class="tab-buttons">
+  <div class="tab-buttons" v-if="isDev">
     <button
       v-for="m of modes"
       :class="{ active: mode === m }"
@@ -48,11 +49,13 @@ const mode = ref<OutputModes>(
 
 <style scoped>
 .output-container {
-  height: calc(100% - var(--header-height));
+  height: 100%;
   overflow: hidden;
   position: relative;
 }
-
+.tab-buttons + .output-container {
+  height: calc(100% - var(--header-height)) !important;
+}
 .tab-buttons {
   box-sizing: border-box;
   border-bottom: 1px solid var(--border);

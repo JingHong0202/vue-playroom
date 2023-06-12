@@ -13,36 +13,9 @@ const defaultMainFile = 'App.vue';
 const uiHref = !import.meta.env.DEV
   ? 'https://unpkg.com/@jinghong/surprise-ui/dist/es/'
   : 'http://localhost:5173/surprise-ui/es/';
-const welcomeCode = `
- <script setup>
-function buildData() {
-  const res = [];
-  for (let index = 0; index < 50; index++) {
-    res.push({ id: index, name: index });
-  }
-  return res;
-}
-const data = buildData();
-</script>
-
-<template>
-  <horizonetal-virtual-list
-    :itemSize="100"
-    :data="data"
-    keyName="id"
-    v-slot="{ slotScope }">
-    <div v-text="slotScope.name" :style="'display:flex;justify-content:center;align-items:center;height: 100%;width:100px;background-color:' + (slotScope.__index % 2 ? 'red' : 'green')"/>
-  </horizonetal-virtual-list>
-</template>
-
-<style>
-#app,
-html,
-body {
-  height: 99%;
-}
-</style>
-`.trim();
+const welcomeCode = `<template>
+  <su-button type="primary">button</su-button>
+</template>`.trim();
 
 const injectCode = `
 import { getCurrentInstance } from 'vue'
@@ -79,6 +52,14 @@ install()
 <template>
   <App />
 </template>
+
+<style>
+html,body {
+  overflow: hidden;
+  padding:0;
+  margin:0;
+}
+</style>
   `.trim();
 export class File {
   filename: string;
