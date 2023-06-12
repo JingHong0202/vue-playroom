@@ -18,9 +18,24 @@ export default defineConfig({
   base: './',
   build: {
     minify: true,
-    outDir: 'playroom'
-    // rollupOptions: {
-    //   external: ["vue", "vue/compiler-sfc"],
-    // },
+    target: 'esnext',
+    outDir: 'playroom',
+    rollupOptions: {
+      external: ['typescript']
+      // output: {
+      //   minifyInternalExports: true,
+      //   compact: true,
+      //   manualChunks(id) {
+      //     if (id.includes('node_modules')) {
+      //       const parse = id
+      //         .toString()
+      //         .split('/')
+      //       return parse[parse.length - 2]
+      //     } else {
+      //       retrun 'vendor'
+      //     }
+      //   }
+      // }
+    }
   }
 });
