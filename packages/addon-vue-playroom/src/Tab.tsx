@@ -80,11 +80,7 @@ export const Tab: FC<TabProps> = ({ active }) => {
         onLoad={() => update_cb(playroom)}
         allowFullScreen
         style={{ visibility: outMode === 1 ? 'unset' : 'hidden' }}
-        src={
-          process.env.NODE_ENV === 'production'
-            ? '/playroom'
-            : 'http://localhost:5173/'
-        }
+        src={playroom.url || '/playroom'}
         title="vue-playroom"
         key={PARAM_KEY}
       />

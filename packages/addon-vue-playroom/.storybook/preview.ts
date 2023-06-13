@@ -14,6 +14,9 @@ const preview: Preview = {
     },
     docs: {
       story: { inline: false }
+    },
+    playroom: {
+      url: "http://localhost:5173"
     }
   }
 };
