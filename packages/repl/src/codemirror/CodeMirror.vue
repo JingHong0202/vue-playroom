@@ -14,7 +14,7 @@ export interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  mode: 'htmlmixed',
+  mode: 'vue',
   value: '',
   readonly: false
 })
@@ -29,7 +29,7 @@ onMounted(() => {
     autoCloseBrackets: true,
     autoCloseTags: true,
     foldGutter: true,
-    gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']
+    gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
   }
 
   const editor = CodeMirror(el.value!, {
