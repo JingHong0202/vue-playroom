@@ -1,14 +1,11 @@
 {
-  "name": "addon-vue-playroom",
-  "version": "0.0.1",
+  "name": "storybook-addon-vue-playroom",
+  "version": "0.0.11",
   "description": "Vue Play Room",
   "keywords": [
-    "storybook-addons"
+    "storybook-addons",
+    "vue"
   ],
-  "repository": {
-    "type": "git",
-    "url": "no"
-  },
   "author": "jinghong",
   "license": "MIT",
   "exports": {
@@ -38,6 +35,14 @@
     "*.js",
     "*.d.ts"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JingHong0202/vue-playroom.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JingHong0202/vue-playroom/issues"
+  },
+  "homepage": "https://github.com/JingHong0202/vue-playroom/blob/dev/packages/addon-vue-playroom/README.md",
   "scripts": {
     "clean": "rimraf ./dist",
     "prebuild": "pnpm clean",
@@ -106,7 +111,7 @@
     "access": "public"
   },
   "storybook": {
-    "displayName": "vue-play-room",
+    "displayName": "vue-playroom",
     "supportedFrameworks": [
       "vue"
     ],
