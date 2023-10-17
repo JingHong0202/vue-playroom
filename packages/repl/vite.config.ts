@@ -1,6 +1,6 @@
 import { defineConfig, Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
-
+import fs from 'node:fs';
 const genStub: Plugin = {
   name: 'gen-stub',
   apply: 'build',
@@ -9,6 +9,12 @@ const genStub: Plugin = {
       type: 'asset',
       fileName: 'ssr-stub.js',
       source: `module.exports = {}`
+    });
+
+    this.emitFile({
+      type: 'asset',
+      fileName: 'pdf.js',
+      source: fs.readFileSync('./pdf.js', { encoding: 'utf8' })
     });
   }
 };

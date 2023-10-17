@@ -65,6 +65,9 @@ export const Tab: FC<TabProps> = ({ active }) => {
   if (playroom?.code == undefined) {
     return <Message>The story has no code parameter set</Message>;
   }
+  if (playroom?.iframe_others == undefined) {
+    playroom.iframe_others = {}
+  }
   window.removeEventListener('message', handlerMessage);
   handlerMessage = ({ data }: MessageEvent) => {
     if (data.type === 'updated') {
@@ -81,6 +84,8 @@ export const Tab: FC<TabProps> = ({ active }) => {
         allowFullScreen
         style={{ visibility: outMode === 1 ? 'unset' : 'hidden' }}
         src={playroom.url || '/playroom'}
+        allow={playroom.iframe_allow || ''}
+        {...playroom.iframe_others}
         title="vue-playroom"
         key={PARAM_KEY}
       />

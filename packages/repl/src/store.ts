@@ -2,6 +2,7 @@ import { version, reactive, watchEffect } from 'vue';
 import * as defaultCompiler from 'vue/compiler-sfc';
 import { compileFile } from './transform';
 import { utoa, atou } from './utils';
+import otherImportMap from './other-import-map'
 import {
   SFCScriptCompileOptions,
   SFCAsyncStyleCompileOptions,
@@ -13,6 +14,9 @@ const defaultMainFile = 'App.vue';
 const uiHref = !import.meta.env.DEV
   ? 'https://unpkg.com/@jinghong/surprise-ui/dist/es/'
   : 'http://localhost:5173/surprise-ui/es/';
+const utilsHref = !import.meta.env.DEV
+  ? 'https://unpkg.com/@jinghong/surprise-ui/dist/'
+  : 'http://localhost:5173/surprise-ui/';
 const welcomeCode = `<template>
   <su-button type="primary">button</su-button>
 </template>`.trim();
@@ -278,7 +282,9 @@ export class ReplStore implements Store {
             imports: {
               vue: this.defaultVueRuntimeURL,
               'vue/server-renderer': this.defaultVueServerRendererURL,
-              'surprise-ui': ` ${uiHref}index.mjs`
+              'surprise-ui': `${uiHref}index.mjs`,
+              'surprise-ui/': `${utilsHref}`,
+             ...otherImportMap
             }
           },
           null,

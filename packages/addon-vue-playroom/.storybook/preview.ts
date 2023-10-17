@@ -16,7 +16,8 @@ const preview: Preview = {
       story: { inline: false }
     },
     playroom: {
-      url: "http://localhost:5173"
+      url: "http://localhost:5173",
+      iframe_allow: 'geolocation'
     }
   }
 };
